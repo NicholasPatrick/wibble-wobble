@@ -1,0 +1,10 @@
+[project]
+name = "wibble-wobble"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "argparse>=1.4.0",
+    "opencv-python>=4.13.0.92",
+]
