@@ -66,8 +66,28 @@ def unprocess_frame(frame, params):
 
 def calculate_movement(average, frame, params):
     h, w, block_size, overlaps = params
+
+    h_block = h // block_size
+    w_block = w // block_size
+    stride = block_size // 2
+
     div = np.angle(np.nan_to_num(frame / average))
-    return div
+
+    idx = np.r_[stride+6-block_size:0, 0:stride-5]
+    x1, x2 = np.meshgrid(idx, idx, indexing="ij")
+    X = np.column_stack([x1.ravel(), x2.ravel()])
+    XtX_inv_Xt = np.linalg.inv(X.T @ X) @ X.T
+
+    sub = div[:, :, idx][:, :, :, idx]
+    y = sub.reshape(frame.shape[0], frame.shape[1], -1)
+
+    coef = np.einsum("ij,abj->abi", XtX_inv_Xt, y)
+    a, b = coef[...,0], coef[...,1]
+
+    i = np.r_[0:stride+1, stride+1-block_size:0][:, None]
+    j = np.r_[0:stride+1, stride+1-block_size:0][None, :]
+    pred = a[..., None, None] * i + b[..., None, None] * j
+    return pred
 
 
 def move_frame(frame, movement, params):
